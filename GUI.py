@@ -4,6 +4,7 @@ __author__ = 'FuQiang'
 
 import os
 import os.path
+import opExcel
 
 import wx
 import  wx.lib.rcsizer  as rcs
@@ -68,14 +69,9 @@ class InputPanel(wx.Panel):
             dlg.Destroy()
             return
 
-        # TODO 调用你自己的处理函数
-        print 'FileDir1: ' + os.path.dirname(self.filepath1)
-
-        print 'Output: ' + os.path.join(os.path.dirname(self.filepath1), 'output.xls')
-
-        # 处理完成，提示
+        resultFileName = opExcel.main(self.filepath1,self.filepath2)
         dlg = wx.MessageDialog(self,
-                               u'生成完毕！\n输出文件：',
+                               u'生成完毕！\n输出文件：' + resultFileName,
                                u'注意啦', wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
