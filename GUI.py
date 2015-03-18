@@ -5,6 +5,7 @@ __author__ = 'FuQiang'
 import os
 import os.path
 import opExcel
+import pprint
 
 import wx
 import  wx.lib.rcsizer  as rcs
@@ -13,65 +14,65 @@ class InputPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
 
-        self.filepath1 = ""
-        self.filepath2 = ""
+        self.filepaths = []
 
         sizer = rcs.RowColSizer()
 
-        text = u"请先选择第一个文件，然后选择第二个文件，最后点击生成按钮"
+        text = u"请添加文件到下方的列表，然后点击生成。"
 
-        sizer.Add(wx.StaticText(self, -1, text), row=1, col=2, colspan=4)
+        sizer.Add(wx.StaticText(self, -1, text), row=1, col=2, colspan=10)
 
-        textctl = wx.TextCtrl(self, style=wx.TE_READONLY)
-        self.textctl1 = textctl
-        sizer.Add(textctl, row=3, col=2, colspan=3, flag=wx.EXPAND)
-        button = wx.Button(self, wx.ID_ANY, u"选择第一个文件")
-        self.Bind(wx.EVT_BUTTON, self.OnButton1, button)
-        sizer.Add(button, row=3, col=5, colspan=1)
+        self.listBox = wx.ListBox(self, size=(550, 300), style=wx.LB_HSCROLL)
+        sizer.Add(self.listBox, row=3, col=2, colspan=9, rowspan=8, flag=wx.EXPAND)
 
-        textctl = wx.TextCtrl(self, style=wx.TE_READONLY)
-        self.textctl2 = textctl
-        sizer.Add(textctl, row=5, col=2, colspan=3, flag=wx.EXPAND)
-        button = wx.Button(self, wx.ID_ANY, u"选择第二个文件")
-        self.Bind(wx.EVT_BUTTON, self.OnButton2, button)
-        sizer.Add(button, row=5, col=5, colspan=1)
+        button = wx.Button(self, wx.ID_ANY, u"添加")
+        self.Bind(wx.EVT_BUTTON, self.OnAdd, button)
+        sizer.Add(button, row=3, col=12)
+
+        button = wx.Button(self, wx.ID_ANY, u"清除")
+        self.Bind(wx.EVT_BUTTON, self.OnClear, button)
+        sizer.Add(button, row=4, col=12)
 
         button = wx.Button(self, wx.ID_ANY, u"生成")
         self.Bind(wx.EVT_BUTTON, self.OnButtonGenerate, button)
-        sizer.Add(button, row=7, col=2, colspan=4, flag=wx.EXPAND)
+        sizer.Add(button, row=8, col=12)
 
         self.SetSizer(sizer)
 
-    def OnButton1(self, event):
+    def OnAdd(self, event):
         dlg = wx.FileDialog(
-            self, message="打开文件", defaultDir=os.getcwd(),
-            defaultFile="", wildcard="All files (*.*)|*.*", style=wx.OPEN)
+            self, message="打开多个文件", defaultDir=os.getcwd(),
+            defaultFile="", wildcard="All files (*.*)|*.*", style=wx.OPEN | wx.MULTIPLE)
         if dlg.ShowModal() == wx.ID_OK:
-            self.filepath1 = dlg.GetPath()
-            self.textctl1.WriteText(self.filepath1)
+            paths = dlg.GetPaths()
+            for path in paths:
+                if path not in self.filepaths:
+                    self.filepaths.append(path)
+
+            self.listBox.Clear()
+            for path in self.filepaths:
+                self.listBox.Append(path)
+
         dlg.Destroy()
 
-    def OnButton2(self, event):
-        dlg = wx.FileDialog(
-            self, message="打开文件", defaultDir=os.getcwd(),
-            defaultFile="", wildcard="All files (*.*)|*.*", style=wx.OPEN)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.filepath2 = dlg.GetPath()
-            self.textctl2.WriteText(self.filepath2)
-        dlg.Destroy()
+    def OnClear(self, event):
+        self.listBox.Clear()
+        self.filepaths = []
 
     def OnButtonGenerate(self, event):
-        if self.filepath1 == "" or self.filepath2 == "":
+        if len(self.filepaths) == 0:
             dlg = wx.MessageDialog(self,
-                                   u'你少选了至少一个文件！！！！',
+                                   u'你应该至少选择一个文件！！！！',
                                    u'注意啦', wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
             return
 
-        resultFileName = opExcel.main(self.filepath1,self.filepath2)
+        pprint.pprint(self.filepaths)
+
+
         dlg = wx.MessageDialog(self,
-                               u'生成完毕！\n输出文件：' + resultFileName,
+                               u'生成完毕！\n输出文件：',
                                u'注意啦', wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
@@ -79,7 +80,7 @@ class InputPanel(wx.Panel):
 class GUI(object):
     def run(self):
         app = wx.App(False)
-        frame = wx.Frame(None, wx.ID_ANY, "opExcel", size=(420, 300))
+        frame = wx.Frame(None, wx.ID_ANY, "opExcel", size=(720, 460))
         frame.CreateStatusBar()
 
         panel = InputPanel(frame)
